@@ -1,0 +1,38 @@
+return {
+    next_id = 4,
+    players = {
+        [3] = {
+            id=3,
+            name="Sun",
+            gender="male",
+            pin="000000",
+            created=1773936240,
+            location=1,
+            score=0,
+            stamina=5,
+            flags={["invisible"]=false,},
+        },
+        [1] = {
+            id=1,
+            name="Zug",
+            gender="female",
+            pin="000000",
+            created=1773915926,
+            location=10,
+            score=500000,
+            stamina=100,
+            flags={["invisible"]=false,},
+        },
+        [2] = {
+            id=2,
+            name="Bog",
+            gender="male",
+            pin="000000",
+            created=1773921976,
+            location=1,
+            score=170,
+            stamina=0,
+            flags={["invisible"]=false,},
+        },
+    },
+}
