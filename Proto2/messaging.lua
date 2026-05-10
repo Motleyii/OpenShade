@@ -107,20 +107,30 @@ function M.format(msg, actor, target)
     if not msg then return nil end
 
     local apron = pronouns(actor)
+    msg = msg:gsub("%%n", actor  and actor.name  or "")
+
+    msg = msg:gsub("%%sn", apron.s)
+    msg = msg:gsub("%%on", apron.o)
+    msg = msg:gsub("%%vn", apron.v)
+    msg = msg:gsub("%%rn", apron.r)
+
+    msg = msg:gsub("%%SN", cap(apron.s))
+    msg = msg:gsub("%%ON", cap(apron.o))
+    msg = msg:gsub("%%VN", cap(apron.v))
+    msg = msg:gsub("%%RN", cap(apron.r))
+
     local tpron = pronouns(target)
+    msg = msg:gsub("%%t", target and target.name or "")
 
-    msg = msg:gsub("%%n", actor and actor.name or "")
-    msg = msg:gsub("%%p", target and target.name or "")
+    msg = msg:gsub("%%st", tpron.s)
+    msg = msg:gsub("%%ot", tpron.o)
+    msg = msg:gsub("%%vt", tpron.v)
+    msg = msg:gsub("%%rt", tpron.r)
 
-    msg = msg:gsub("%%s", tpron.s)
-    msg = msg:gsub("%%o", tpron.o)
-    msg = msg:gsub("%%v", tpron.v)
-    msg = msg:gsub("%%r", tpron.r)
-
-    msg = msg:gsub("%%S", cap(tpron.s))
-    msg = msg:gsub("%%O", cap(tpron.o))
-    msg = msg:gsub("%%P", cap(tpron.v))
-    msg = msg:gsub("%%R", cap(tpron.r))
+    msg = msg:gsub("%%ST", cap(tpron.s))
+    msg = msg:gsub("%%OT", cap(tpron.o))
+    msg = msg:gsub("%%VT", cap(tpron.v))
+    msg = msg:gsub("%%RT", cap(tpron.r))
 
     return msg
 end

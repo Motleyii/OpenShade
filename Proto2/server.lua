@@ -215,13 +215,15 @@ local function create_player(name, pin)
 
     local p = {
         id      = id,
-        name    = name,
-        adverb  = nil,
-        pin     = pin,
         created = os.time(),
+        adverb  = nil,
+        name    = name,
+        pin     = pin,
         home    = nil,
         score   = 0,
-        flags   = { ismale = true, isinvis = false },
+        hiscore = 0,
+        kills   = {attacks = 0, defences = 0, deaths = 0 },
+        flags   = {verbose = true, ismale = true, isinvis = false, ispacifist = false},
         np      = nil
     }
 

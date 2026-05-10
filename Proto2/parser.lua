@@ -93,6 +93,17 @@ local wizard   = require("wizard")
 local Parser = {}
 
 -------------------------------------------------
+-- Helpers
+-------------------------------------------------
+
+local function is_pure_number(str)
+    if not str or type(str) ~= "string" then
+        return false
+    end
+    return str:match("^%d+$") ~= nil
+end
+
+-------------------------------------------------
 -- Known verbs
 -------------------------------------------------
 
@@ -189,7 +200,44 @@ end
 -------------------------------------------------
 
 local function resolve_local(player, ch, word)
+    local first  = word:sub(1,1)
+    local rest   = word:sub(2)
+    local is_num = is_pure_number(word)
+
+    local id = nil
+    if is_num then
+        id = tonumber(word)
+    else
+        id = tonumber(rest)
+    end
+
     word = word:lower()
+
+    if id then
+        if first == ch or is_num then
+            if ch == "#" then
+                -- Object: must be in inventory or in current room
+                local r = db.world.rooms[player.np.room]
+                if player.np.inventory[id] or (r.np.objects and r.np.objects[id]) then
+                    return "#" .. id
+                end
+            elseif ch == "$" then
+                -- NPC: must be in current room
+                local r = db.world.rooms[player.np.room]
+                if r.np.npcs and r.np.npcs[id] then
+                    return "$" .. id
+                end
+            elseif ch == "&" then
+                -- Other player: must be in current room
+                local r = db.world.rooms[player.np.room]
+                if r.np.players and r.np.players[id] then
+                    return "&" .. id
+                end
+            elseif ch == "@" and db.world.rooms[id] then
+                return "@" .. id
+            end
+        end
+    end
 
     if ch == "#" then
         -- Inventory first
@@ -198,6 +246,7 @@ local function resolve_local(player, ch, word)
                 return "#" .. oid
             end
         end
+
         -- Then room objects
         local r = db.world.rooms[player.np.room]
         for oid in pairs(r.np.objects or {}) do
@@ -226,6 +275,31 @@ local function resolve_local(player, ch, word)
 end
 
 local function resolve_global(ch, word)
+    local first  = word:sub(1,1)
+    local rest   = word:sub(2)
+    local is_num = is_pure_number(word)
+
+    local id = nil
+    if is_num then
+        id = tonumber(word)
+    else
+        id = tonumber(rest)
+    end
+
+    if id then
+        if first == ch or is_num then
+            if ch == "#" and db.world.objects[id] then
+                return "#" .. id
+            elseif ch == "$" and db.world.npcs[id] then
+                return "$" .. id
+            elseif ch == "&" and db.world.players[id] then
+                return "&" .. id
+            elseif ch == "@" and db.world.rooms[id] then
+                return "@" .. id
+            end
+        end
+    end
+
     word = word:lower()
 
     if ch == "#" then
@@ -324,7 +398,7 @@ local function parse_core(player, input, argspec)
     words = filtered
 
     -- No argspec → trivial command
-    if not argspec then
+    if not argspec or argspec == "" then
         return {
             verb = words[1],
             args = {},
@@ -455,6 +529,9 @@ function Parser.parse(player, input)
            wizard.get_argspec(verb)
         or spells.get_argspec(verb)
         or commands.get_argspec(verb)
+        or ""
+
+    print("Parser.parse: verb=[" .. verb .. "], argspec = [" .. argspec .. "]")
 
     return parse_core(player, input, argspec)
 end

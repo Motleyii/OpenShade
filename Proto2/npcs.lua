@@ -143,7 +143,31 @@ return {
 	[5]=  {id=5,  name="deer",    noun={"deer"},    power=8,    max_stamina=100,   value=50,   speed=50, enters="A large red deer stalks in.",                                  leaves="The deer stalks gracefully away.",                            here="A deer grazes nearby.",                                   path={126, 127, 121, 57, 55, 6, 55, 57, 122, 123, 124, 125}, flags=nil, puzzles=nil, np=nil},
 	[6]=  {id=6,  name="dwarf",   noun={"dwarf"},   power=20,   max_stamina=140,   value=70,   speed=70, enters="A dwarf housekeeper stumps in.",                               leaves="The dwarf housekeeper stumps out.",                           here="The dwarf housekeeper eyes you with suspicion.",          path={500, 504, 501, 503, 508, 509, 510, 511, 512, 513, 497, 494, 491, 489, 492, 495, 498, 502, 506, 499, 505}, flags=nil, puzzles=nil, np=nil},
 	[7]=  {id=7,  name="ghost",   noun={"ghost"},   power=5,    max_stamina=125,   value=75,   speed=75, enters="A ghost glides in, moaning horribly!",                         leaves="The ghost glides out..",                                      here="A ghost floats before you!",                              path={44, 47, 45, 44, 43, 42, 43}, flags=nil, puzzles=nil, np=nil},
-	[8]=  {id=8,  name="girl",    noun={"girl"},    power=1000, max_stamina=1000,  value=1000, speed=10, enters="The Strange Little Girl drifts in..",                          leaves="The Strange Little Girl drifts out..",                        here="The Strange Little Girl is standing nearby.",             path={139, 138, 137, 134, 133, 132, 131, 130, 129, 128, 127, 125, 124, 40, 21, 13, 415, 414, 6, 7, 8, 53, 49, 54, 61, 71, 72, 73}, flags=nil, puzzles=nil, np=nil},
+	[8]=  {
+		id=8, name="girl", noun={"girl"},
+		power=1000, max_stamina=1000,  value=1000, speed=100,
+		enters="The Strange Little Girl drifts in..",
+		leaves="The Strange Little Girl drifts out..",
+		here="The Strange Little Girl is standing nearby.",
+		path={139, 138, 137, 134, 133, 132, 131, 130, 129, 128, 127, 125, 124, 40, 21, 13, 415, 414, 6, 7, 8, 53, 49, 54, 61, 71, 72, 73},
+		flags=nil, np=nil,
+		puzzles = {
+			{
+	        verb    = "touch",
+    	    argspec = "$",
+			test    = "ARG1 == N(8)", -- local player/NPC required by argspec
+			effect  = "HEAL()",
+			psucc   = "As you reach towards the girl, she turns and looks at you. Her hands\nstretch out, and you notice a swirl of milky luminance deep within her\neyes....as your fingers touch, you feel a strange tingling sensation\ncourse through you, refreshing and invigorating.",
+			},
+			{
+	        verb    = "touch",
+    	    argspec = "$",
+			test    = "IS_PLAYER(ARG1)",
+			psucc   = "You poke %t in the arm...",
+			tsucc   = "%p pokes you in the arm... ouch!"
+			},
+		},
+	},
 	[9]=  {id=9,  name="guard",   noun={"guard"},   power=8,    max_stamina=350,   value=80,   speed=80, enters="A burly guard strides in.",                                    leaves="The guard strides out.",                                      here="A guard stands rigidly to attention near you.",           path={8, 53, 49, 54, 61, 62, 61, 54, 6, 7, 8, 9, 10, 9}, flags=nil, puzzles=nil, np=nil},
 	[10]= {id=10, name="hermit",  noun={"hermit"},  power=18,   max_stamina=400,   value=70,   speed=70, enters="The hermit stamps angrily in.",                                leaves="The hermit glares angrily at you before stamping out.",       here="The hermit looks at you with evident distaste.",          path={754, 752, 753, 752, 754, 761, 755, 761, 755, 756, 757, 755}, flags=nil, puzzles=nil, np=nil},
 	[11]= {id=11, name="hound",   noun={"hound"},   power=8,    max_stamina=130,   value=60,   speed=60, enters="DOES NOT MOVE",                                                leaves="DOES NOT MOVE",                                               here="The hound of San Simeon guards the stairs.",              path={503}, flags=nil, puzzles=nil, np=nil},

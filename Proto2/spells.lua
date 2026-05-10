@@ -105,6 +105,7 @@
 local db         = require("database")
 local msg        = require("messaging")
 local Dispatcher = require("dispatcher")
+local serpent    = require("serpent")
 
 local Spells = {}
 local dispatch = Dispatcher.new()
@@ -119,6 +120,20 @@ end
 
 local function here(player) return player.np.room end
 
+local function is_wizard(player) return db.get_level(player).level >= 13 end
+
+local function room(r) return db.world.rooms[r] end
+
+local function spell_always_succeeds(player)
+    if is_wizard(player) then
+        return true
+    end
+
+    -- Lucky status always succeeds
+    local now = os.time()
+    return player.np and player.np.lucky_until and player.np.lucky_until > now
+end
+
 -------------------------------------------------
 -- SPELL IMPLEMENTATIONS
 -------------------------------------------------
@@ -128,27 +143,40 @@ local function spell_where(player, parsed)
     local arg = parsed.args[1]
     local t = arg:sub(1,1)
     local i = id(arg)
+    local r = nil
 
     if t == "#" then
         local o = db.world.objects[i]
         if o and o.np then
-            msg.to_player(player, o.name .. " is in room " .. o.np.location .. ".")
+            r = o.np.location
         end
     elseif t == "$" then
         local n = db.world.npcs[i]
         if n and n.np then
-            msg.to_player(player, n.name .. " is in room " .. n.np.location .. ".")
+            r = n.np.location
         end
     elseif t == "&" then
         local p = db.world.players[i]
         if p and p.np then
-            msg.to_player(player, p.name .. " is in room " .. p.np.room .. ".")
+            r = p.np.location
         end
+    end
+
+    
+    if r then
+        local room_obj = room(r)
+        local rdesc = room_obj.title
+        if is_wizard(player) then
+            rdesc = rdesc .. " (" .. r .. ")"
+        end
+        msg.to_player(player,rdesc)
     end
 end
 
 -- SUMMON <npc|player> (global)
 local function spell_summon(player, parsed)
+
+print("spell_summon: " .. serpent.line(parsed))
     local arg = parsed.args[1]
     local t = arg:sub(1,1)
     local i = id(arg)
@@ -167,7 +195,8 @@ local function spell_summon(player, parsed)
         local p = db.world.players[i]
         if p and p.np then
             p.np.room = here(player)
-            msg.to_player(p, player.name " summons you magically!")
+            msg.to_player(p, player.name .. " summons you magically!")
+            msg.to_room(here(player), p.name .. " suddenly appears!", nil)
         end
     end
      msg.to_player(player, "Your spell worked!")
@@ -293,22 +322,18 @@ end
 -- DISPATCH REGISTRATION
 -------------------------------------------------
 
-dispatch:register("where",    { argspec="g#$&", fn=spell_where })
-dispatch:register("locate",   { argspec="g#$&", fn=spell_where })
-
-dispatch:register("summon",   { argspec="g$&", fn=spell_summon })
-dispatch:register("cure",     { argspec="$&", fn=spell_cure })
-dispatch:register("jaunt",    { fn=spell_jaunt })
-
+dispatch:register("where",    { argspec="g#$&",  fn=spell_where, aliases={"locate"} })
+dispatch:register("summon",   { argspec="g$&",   fn=spell_summon })
+dispatch:register("cure",     { argspec="$&",    fn=spell_cure })
+dispatch:register("jaunt",    { argspec="g$&",   fn=spell_jaunt })
 dispatch:register("teleport", { argspec="g$& @", fn=spell_teleport })
-dispatch:register("steal",    { argspec="# &", fn=spell_steal })
-dispatch:register("strip",    { argspec="$&", fn=spell_strip })
-dispatch:register("force",    { argspec="g& *", fn=spell_force })
-
-dispatch:register("freeze",   { argspec="$&", fn=spell_freeze })
-dispatch:register("confuse",  { argspec="$&", fn=spell_confuse })
-dispatch:register("dumb",     { argspec="$&", fn=spell_dumb })
-dispatch:register("dispel",   { argspec="$&", fn=spell_dispel })
+dispatch:register("steal",    { argspec="# &",   fn=spell_steal })
+dispatch:register("strip",    { argspec="$&",    fn=spell_strip })
+dispatch:register("force",    { argspec="g& *",  fn=spell_force })
+dispatch:register("freeze",   { argspec="$&",    fn=spell_freeze })
+dispatch:register("confuse",  { argspec="$&",    fn=spell_confuse })
+dispatch:register("dumb",     { argspec="$&",    fn=spell_dumb })
+dispatch:register("dispel",   { argspec="$&",    fn=spell_dispel })
 
 -------------------------------------------------
 -- Public API

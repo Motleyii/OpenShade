@@ -131,9 +131,9 @@ local reset_triggered = false
 -- Time tracking
 -------------------------------------------------
 
-local last_tick = os.time()
+local last_tick     = os.time()
 local last_npc_tick = os.time()
-local last_reset = os.time()
+local last_reset    = os.time()
 
 -------------------------------------------------
 -- Movement handler
@@ -155,12 +155,12 @@ function G.handle_player_input(player, input)
     if not input or input == "" then return end
 
     local parsed = parser.parse(player, input)
-    if not parsed then
-        msg.to_player(player, "Huh?")
-        return
-    end
+    --if not parsed then
+    --    msg.to_player(player, "Huh?")
+    --    return
+    --end
 
-print("handle_player_input: " .. serpent.line(parsed))
+print("handle_player_input: [" .. input .. "] = " .. serpent.line(parsed))
 
     -------------------------------------------------
     -- COMMAND PRECEDENCE
@@ -176,7 +176,7 @@ print("handle_player_input: " .. serpent.line(parsed))
     end
 
     -- Local puzzles
-    if puzzle.process(player, parsed) then return end
+    if puzzle.process(player, input) then return end
 
     -- Spells
     if spells.handle(player, parsed) then return end
@@ -193,7 +193,7 @@ end
 
 function G.npc_tick()
     for _, npc in pairs(db.world.npcs) do
-        if npc.speed and npc.speed > 0 then
+        if npc.speed and npc.speed > 0 and not combat.is_in_combat(npc) then
             npc.np.move_counter = (npc.np.move_counter or 0) + G.NPC_TICK
             if npc.np.move_counter >= npc.speed then
                 npc.np.move_counter = 0
@@ -215,21 +215,61 @@ function G.npc_tick()
             end
         end
 
-        -- aggression
+        -- === AGGRESSION (Improved) ===
         if npc.flags and npc.flags.isaggressive then
             local room = db.world.rooms[npc.np.location]
+            if not room or not room.np.players then
+                goto continue_aggression
+            end
+
+            -- Cooldown: don't attack again too soon (prevents spam after combat ends)
+            local now = os.time()
+            if npc.np.last_attack and (now - npc.np.last_attack) < 8 then  -- 8-second cooldown
+                goto continue_aggression
+            end
+
+            -- Random chance so aggression isn't 100% predictable
+            if math.random(100) > 15 then   -- 15% chance per NPC tick (~every 5 seconds)
+                goto continue_aggression
+            end
+
             for pid in pairs(room.np.players) do
                 local p = db.world.players[pid]
-                if p and not p.np.fighting then
-                    combat.start_fight(
-                        {type="npc", id=npc.id},
-                        {type="player", id=p.id},
-                        "npc"
-                    )
-                    break
+                if not p or not p.np then
+                    goto next_player
                 end
+
+                -- Skip players who are already fighting
+                if combat.is_in_combat(p) then
+                    goto next_player
+                end
+
+                -- Skip invisible players (if invisibility flag is used)
+                if p.flags and p.flags.isinvis then
+                    goto next_player
+                end
+
+                -- Only attack if the NPC itself is not currently fighting
+                if not combat.is_in_combat(npc) then
+                    combat.start(npc, p)
+
+                    -- Flavor message (in addition to the one from combat.start)
+                    msg.to_room(
+                        npc.np.location,
+                        npc.name .. " snarls and suddenly attacks " .. p.name .. "!",
+                        nil
+                    )
+
+                    npc.np.last_attack = now   -- record attack time for cooldown
+                    break                      -- one attack per NPC per successful tick
+                end
+
+                ::next_player::
             end
+
+            ::continue_aggression::
         end
+
     end
 end
 
@@ -323,10 +363,9 @@ function G.tick()
     if now - last_tick >= G.TICK_INTERVAL then
         last_tick = now
 
-        -- combat progresses every tick
-        combat.tick()
-
-        G.cleanup()
+        db.tick_timers()    -- timed puzzle events
+        combat.tick()       -- combat progresses every tick
+        G.cleanup()         -- cleanup disconnected or dead players
     end
 
     if now - last_npc_tick >= G.NPC_TICK then

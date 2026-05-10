@@ -101,6 +101,8 @@
 local db         = require("database")
 local msg        = require("messaging")
 local Dispatcher = require("dispatcher")
+local movement   = require("movement")
+local serpent    = require("serpent")
 
 local Wizard = {}
 local dispatch = Dispatcher.new()
@@ -164,10 +166,7 @@ local function do_wizgo(player, parsed)
     player.np.room = rid
     room.np.players[player.id] = true
 
-    msg.to_player(player, room.title)
-    if player.flags.verbose and room.desc then
-        msg.to_player(player, room.desc)
-    end
+    movement.describe_room(player, room)
 end
 
 -------------------------------------------------
@@ -280,18 +279,28 @@ end
 local function do_puzzeditor(player, parsed)
     if not require_wizard(player) then return end
     if not start_puzzle_editor then
-        msg.to_player(player, "Editor subsystem not available.")
+        msg.to_player(player, "Editor system not available.")
         return
     end
 
-    local text = parsed.args[1]
-    if not text then
-        msg.to_player(player, "Usage: puzzeditor room|object|npc <id>")
+    local ref = parsed.args[1]
+    if not ref then
+        msg.to_player(player, "Usage: puzzeditor <@room|#object|$npc>")
         return
     end
 
-    local kind, idstr = text:match("^(%S+)%s+(%d+)$")
-    start_puzzle_editor(player, kind, tonumber(idstr))
+    local tag = ref:sub(1,1)
+    local id  = tonumber(ref:sub(2))
+
+    if tag == "@" then
+        start_puzzle_editor(player, "room", id)
+    elseif tag == "#" then
+        start_puzzle_editor(player, "object", id)
+    elseif tag == "$" then
+        start_puzzle_editor(player, "npc", id)
+    else
+        msg.to_player(player, "Usage: puzzeditor <@room|#object|$npc>")
+    end
 end
 
 -------------------------------------------------
@@ -416,6 +425,11 @@ local function do_xo(player, parsed)
     if o.desc then
         msg.to_player(player, '"' .. o.desc .. '"')
     end
+
+    if o.np then
+        msg.to_player(player, ".np = " .. serpent.line(o.np))
+    end
+
 end
 
 -------------------------------------------------
@@ -423,11 +437,11 @@ end
 -------------------------------------------------
 
 dispatch:register("wizgo",      {argspec = "@",     fn = do_wizgo, aliases = { "sgo" }})
-dispatch:register("wizget",     {argspec = "g#",    fn = do_wizget, aliases = { "mg" }})
+dispatch:register("wizget",     {argspec = "g#",    fn = do_wizget, aliases = { "mt" }})
 dispatch:register("wizwhere",   {argspec = "g#$&",  fn = do_wizwhere, aliases = { "ww" }})
 dispatch:register("wizbackup",  {argspec = "#$&@?", fn = do_wizbackup})
 dispatch:register("objeditor",  {argspec = "*",     fn = do_objeditor})
-dispatch:register("puzzeditor", {argspec = "*",     fn = do_puzzeditor})
+dispatch:register("puzzeditor", {argspec = "g#$@",  fn = do_puzzeditor})
 dispatch:register("roomeditor", {argspec = "*",     fn = do_roomeditor})
 dispatch:register("xobj",       {argspec = "g#",    fn = do_xo, aliases = { "xo"} })
 
@@ -448,10 +462,3 @@ function Wizard.get_argspec(verb)
 end
 
 return Wizard
-
-
-
-
-
-
-

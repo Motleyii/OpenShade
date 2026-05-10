@@ -3,9 +3,17 @@ return {
     created = 1690500000,
     flags = {
       isinvis = false,
-      ismale = false
+      ismale = false,
+      ispacifist = false,
+      verbose = true
     },
+    hiscore = 100,
     id = 1,
+    kills = {
+      attacks = 0,
+      deaths = 0,
+      defences = 0
+    },
     name = "Sun",
     pin = "000000",
     score = 100
@@ -16,10 +24,17 @@ return {
     flags = {
       isinvis = false,
       ismale = true,
+      ispacifist = false,
       verbose = true
     },
+    hiscore = 450,
     home = 1,
     id = 2,
+    kills = {
+      attacks = 0,
+      deaths = 0,
+      defences = 0
+    },
     name = "Bram",
     pin = "000000",
     score = 450
@@ -28,22 +43,38 @@ return {
     created = 1776256601,
     flags = {
       isinvis = false,
-      ismale = true
+      ismale = true,
+      ispacifist = false,
+      verbose = true
     },
+    hiscore = 0,
     id = 3,
-    name = "motleyu",
-    pin = "sdf",
+    kills = {
+      attacks = 0,
+      deaths = 0,
+      defences = 0
+    },
+    name = "Otley",
+    pin = "000000",
     score = 0
   },
   {
     created = 1776270880,
     flags = {
       isinvis = false,
-      ismale = true
+      ismale = true,
+      ispacifist = false,
+      verbose = true
     },
+    hiscore = 0,
     id = 4,
-    name = "mott",
-    pin = "123456",
+    kills = {
+      attacks = 0,
+      deaths = 0,
+      defences = 0
+    },
+    name = "Mott",
+    pin = "000000",
     score = 0
   },
   [0] = {
@@ -52,10 +83,17 @@ return {
     flags = {
       isinvis = false,
       ismale = true,
+      ispacifist = false,
       verbose = true
     },
+    hiscore = 250000,
     home = 4,
     id = 0,
+    kills = {
+      attacks = 0,
+      deaths = 0,
+      defences = 0
+    },
     name = "Motley",
     pin = "000000",
     score = 250000

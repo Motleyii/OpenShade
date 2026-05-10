@@ -53,11 +53,19 @@ local serpent = require("serpent")
 
 local Movement = {}
 
+local function is_wizard(player)
+    return db.get_level(player).level >= 13
+end
+
 function Movement.describe_room(player, r, opts)
     opts = opts or {}
 
     -- Always show title
-    msg.to_player(player, r.title)
+    local title = r.title
+    if is_wizard(player) then
+        title = title .. " (" .. r.id .. ")"
+    end
+    msg.to_player(player, title)
 
     -- Description depends on verbosity
     local force_desc = opts.force_desc or false
@@ -69,7 +77,7 @@ function Movement.describe_room(player, r, opts)
     for oid in pairs(r.np.objects) do
         local o = db.world.objects[oid]
         if o then
-            msg.to_player(player, o.desc)
+            msg.to_player(player, db.get_object_desc(o))
         end
     end
 

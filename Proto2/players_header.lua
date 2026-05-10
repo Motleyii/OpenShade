@@ -1,0 +1,100 @@
+--============================================================--
+-- players.lua
+--
+-- PURPOSE:
+--   Defines all persistent player records for the game.
+--   Each entry in this file represents a single player’s
+--   saved character data, including identity, attributes,
+--   inventory, and configuration flags.
+--
+--   players.lua contains player *definitions only*.
+--   Transient and connection-specific state is stored
+--   separately in per-player `np` (non-persistent) tables.
+--
+--============================================================--
+--
+-- PLAYER TABLE STRUCTURE:
+--
+--   Each player is stored as an entry in the players table,
+--   indexed by a numeric player ID:
+--
+--     players[player_id] = { ... }
+--
+--============================================================--
+--
+-- PLAYER FIELDS:
+--
+--   id
+--     Numeric player identifier. Must match the table index.
+--
+--   name
+--     Player’s character name. Used for display, messaging,
+--     command resolution, and identification.
+--
+--   level
+--     Numeric level of the player. Used to determine
+--     access to spells, wizard commands, and capabilities.
+--
+--   score
+--     Numeric score value accumulated by the player through
+--     gameplay actions.
+--
+--   stamina
+--     Current stamina value for the player. Acts as the
+--     primary durability or effort resource and may be
+--     reduced by combat or actions.
+--
+--   max_stamina
+--     Maximum stamina value for the player. Upper bound for
+--     stamina recovery and capacity.
+--
+--   inventory
+--     Table representing objects currently carried by the
+--     player. Typically implemented as a set keyed by
+--     object ID.
+--
+--   flags
+--     Table of boolean attributes describing player-specific
+--     options or semantic properties. Common flags include:
+--
+--       ismale     — Player character is grammatically male
+--       verbose    — Player receives full room descriptions
+--       brief      — Player prefers abbreviated output
+--
+--     Interpretation of flags is handled by gameplay and
+--     presentation systems.
+--
+--============================================================--
+--
+-- RUNTIME (NON-PERSISTENT) STATE:
+--
+--   np
+--     Non-persistent runtime state table.
+--     This field is NOT saved to disk and exists only while
+--     the player is connected or active. Common runtime
+--     fields include:
+--
+--       room        — Current room ID
+--       conn        — Network connection object
+--       target      — Current combat target, if any
+--       fighting    — Whether the player is in combat
+--       berserk     — Whether berserk mode is active
+--
+--     The `np` table must never be edited in players.lua.
+--
+--============================================================--
+--
+-- DESIGN NOTES:
+--
+--   * players.lua defines persistent character data only.
+--
+--   * Runtime connection state, combat state, and temporary
+--     effects must live exclusively in the `np` table.
+--
+--   * Player noun matching is based on the name field and
+--     is case-insensitive.
+--
+--   * Any changes to player fields should be reflected in
+--     save/load logic and wizard inspection tools.
+--
+--============================================================--

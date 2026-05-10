@@ -111,8 +111,11 @@ database.world = {
     npcs    = {},
     players = {},
     levels  = {},
-    help    = {}
+    help    = {},
+    timers  = {},
 }
+
+database._next_timer_id = database._next_timer_id or 1
 
 -------------------------------------------------
 -- Utility helpers
@@ -130,6 +133,79 @@ end
 local function ensure(tbl, field, default)
     if tbl[field] == nil then
         tbl[field] = default
+    end
+end
+
+-------------------------------------------------
+-- Timers for scheduled events
+-------------------------------------------------
+
+-- Schedule a callback to run after `seconds`.
+-- Returns a numeric timer id that can be canceled.
+function database.after(seconds, fn)
+    if type(fn) ~= "function" then
+        return nil
+    end
+
+    local s = tonumber(seconds) or 0
+    if s < 0 then s = 0 end
+
+    local id = database._next_timer_id
+    database._next_timer_id = id + 1
+
+    local due = os.time() + math.floor(s)
+
+    database.timers[#database.timers + 1] = {
+        id = id,
+        due = due,
+        fn = fn,
+        canceled = false
+    }
+
+    return id
+end
+
+-- Cancel a scheduled callback by id.
+-- Returns true if a pending timer was canceled, false otherwise.
+function database.cancel_timer(id)
+    id = tonumber(id)
+    if not id then return false end
+
+    for _, t in ipairs(database.timers) do
+        if t.id == id and not t.canceled then
+            t.canceled = true
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Run all due timers. Call this from the main game tick.
+function database.tick_timers()
+    if not database.timers or #database.timers == 0 then return end
+
+    local now = os.time()
+    local i = 1
+
+    while i <= #database.timers do
+        local t = database.timers[i]
+
+        if t.canceled then
+            table.remove(database.timers, i)
+
+        elseif t.due <= now then
+            table.remove(database.timers, i)
+
+            local ok, err = pcall(t.fn)
+            -- Optional: log errors if you have a logger
+            if not ok then 
+                print("database.tick_timers error: " .. tostring(err))
+            end
+
+        else
+            i = i + 1
+        end
     end
 end
 
@@ -182,12 +258,17 @@ function database.load_objects(path)
         ensure(o, "flags", {})
         ensure(o, "puzzles", {})
         ensure(o, "np", {})
+        ensure(o, "home", 0)
 
         o.np.state = 0
         o.np.location = o.home   -- room id or player id later
         o.np.owner = nil         -- player id if carried
 
         database.world.objects[id] = o
+
+        if not database.world.rooms[o.home] then
+            database.world.rooms[o.home] = 0
+        end
 
         -- place object in home room
         if database.world.rooms[o.home] then
@@ -213,6 +294,7 @@ function database.load_npcs(path)
         n.np.stamina = n.max_stamina
         n.np.path_index = 1
         n.np.location = n.path and n.path[1] or 0
+        n.np.last_attack = 0
 
         database.world.npcs[id] = n
 
@@ -343,6 +425,19 @@ function database.get_level_name_adverb(player)
     return (adverb .. lvl.male) or "absolutely Unmentionable"
 end
 
+function database.get_fight_power(player)
+    if player.np.weapon then
+        local oid = player.np.weapon
+        return database.objects[oid].power
+    else
+        return database.get_level(player).fist_power
+    end
+end
+
+function database.get_max_load(player)
+    return database.levels[database.get_level(player)].max_weight
+end
+
 -------------------------------------------------
 -- Database writers
 -------------------------------------------------
@@ -385,6 +480,24 @@ function database.backup(name, data)
     f:write(serpent.block(copy, { comment = false }))
     f:write("\n")
     f:close()
+end
+
+-------------------------------------------------
+-- Object name/desc helpers
+-------------------------------------------------
+
+function database.get_object_name(obj)
+    if obj.np and obj.np.name then
+        return obj.np.name
+    end
+    return obj.name
+end
+
+function database.get_object_desc(obj)
+    if obj.np and obj.np.desc and obj.np.desc ~= "" then
+        return obj.np.desc
+    end
+    return obj.desc
 end
 
 return database

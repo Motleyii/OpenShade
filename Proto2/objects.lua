@@ -222,4 +222,77 @@ return {
 	[111]= {id=111, name="amber clasp",                   noun={"AMBER", "CLASP"},                       desc="There is a beautiful amber clasp here.",                        value=100, power=0,  weight=300,   home=nil, respawn=nil,                  flags={ismale=true,  isplural=false, isvowel=true }, puzzles=nil, np=nil},
 	[112]= {id=112, name="cheap trinket",                 noun={"CHEAP", "TRINKET"},                     desc="The dull glitter of a cheap trinket catches your eye.",         value=15,  power=0,  weight=150,   home=661, respawn=nil,                  flags={ismale=true,  isplural=false, isvowel=false}, puzzles=nil, np=nil},
 	[113]= {id=113, name="ivory bookmark",                noun={"IVORY", "BOOKMARK"},                    desc="There is a worn but still valuable bookmark here.",             value=75,  power=0,  weight=250,   home=nil, respawn=nil,                  flags={ismale=true,  isplural=false, isvowel=false}, puzzles=nil, np=nil},
-    }
+	[200]= {id=200, name="grandfather clock",             noun={"CLOCK"},                                desc="There is an old, dusty grandfather clock here.",                value=100, power=0,  weight=9000,  home=5,   respawn=nil,                  flags={ismale=true,  isplural=false, isvowel=false}, np=nil,
+		puzzles = {
+			{
+	        verb    = "wind",
+    	    argspec = "#",
+        	test    = "IS_OBJ(ARG1) and ID(ARG1) == 200 and STATE(O(200)) == 0",  -- wind clock state=0
+	        effect  = "STINC(O(200)); SET_DESC(O(200),\"There is an old grandfather clock here. The dust on the dial has been disturbed.\")",
+    	    psucc   = "You reach up, open the dial face and turn the winding key. Not much seems to happen.",
+        	rsucc   = "$player reaches up, opens the clock dial face and turns the winding key.",
+    		},
+			{
+	        verb    = "wind",
+    	    argspec = "#",
+        	test    = "IS_OBJ(ARG1) and ID(ARG1) == 200 and STATE(ARG1) == 1",  -- wind clock state=1
+	        effect  = "STINC(O(200)); SET_DESC(O(200),\"There is an old grandfather clock here, making an odd clonking sound.\")",
+    	    psucc   = "You reach up and purposefully turn the winding key. The clock emits a loud clonk.",
+        	rsucc   = "$player reaches up and purposefully turns the winding key. The clock emits a loud clonk.",
+    		},
+			{
+	        verb    = "wind",
+    	    argspec = "#",
+        	test    = "IS_OBJ(ARG1) and ID(ARG1) == 200 and STATE(ARG1) == 2",  -- wind clock state=1
+	        effect  = "STINC(O(200)); SET_DESC(O(200),\"There is an old grandfather clock here, ticking loudly.\")",
+    	    psucc   = "You reach up and carefully turn the winding key as you sense it is under tension. The clock starts tick-toking in a very satisfying manner.",
+        	rsucc   = "$player reaches up and carfully turns the winding key, causing the clock to emit a rythmic tick-tock.",
+    		},
+			{
+	        verb    = "wind",
+    	    argspec = "#",
+        	test    = "IS_OBJ(ARG1) and ID(ARG1) == 200 and STATE(ARG1) == 3",  -- wind clock state=1
+	        effect  = "STINC(O(200)); MOVE(O(201),LOCATE(ME()))",
+    	    psucc   = "You reach up and grasp the winding key, but as you do the clock starts chiming and a small door opens in the dial.  Something falls out onto the floor!",
+    		},
+			{
+	        verb    = "wind",
+    	    argspec = "#",
+        	test    = "IS_OBJ(ARG1) and ID(ARG1) == 200",  -- We only get here if clock is fully wound
+    	    psucc   = "The clock resists your attempt to wind it further, it is apparently fully wound."
+		 	},
+			{
+	        verb    = "wind",
+    	    argspec = "#",
+        	test    = "IS_OBJ(ARG1) and ID(ARG1) ~= 200",  -- Fallback message if player is trying to wind something else
+    	    psucc   = "I'm not sure how you would wind that!"
+		 	},
+		}
+	},
+	[201]=  {id=201, name="gold cuckoo", noun={"CUCKOO", "GOLD"}, desc="Your heart races as you espy a magnificent golden cuckoo!", value=200, power=0,  weight=1000,  home=nil, respawn=nil, flags={ismale=true,  isplural=false, isvowel=false}, puzzles=nil, np=nil},
+
+	[800]=  {id=800, name="potion of clarity", noun={"POTION", "CLARITY"}, desc="A small vial of odd looking liquid rests delicately nearby.", value=200, power=0,  weight=100,  home=20, respawn={20}, flags={ismale=nil,  isplural=false, isvowel=false}, np=nil,
+		puzzles = {
+			{
+	        verb    = "drink",
+    	    argspec = "#",
+			test    = "OWNED(ARG1) and ARG1 == O(800) and IS_CONFUSED()",
+			effect  = "CLEAR_CONFUSED(); RESPAWN(ARG1)",
+			psucc   = "You drink the potion and your head clears.",
+			pfail   = "Nothing happens."
+			},
+		},
+	},
+	[801]=  {id=801, name="hymn of release", noun={"HYMN", "RELEASE"}, desc="There's crumpled manuscipt appearing to bear a devotional song here.", value=200, power=0,  weight=100,  home=20, respawn={20}, flags={ismale=nil,  isplural=false, isvowel=false}, np=nil,
+		puzzles = {
+			{
+	        verb    = "chant",
+    	    argspec = "#",
+			test    = "OWNED(ARG1) and ARG1 == O(801) and IS_FROZEN()",
+			effect  = "CLEAR_FROZEN(); RESPAWN(ARG1)",
+			psucc   = "As ou chant the words of the hymn a warmth returns to your limbs.",
+			pfail   = "Nothing happens."
+			},
+		},
+	},
+}
